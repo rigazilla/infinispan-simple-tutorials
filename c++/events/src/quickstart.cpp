@@ -113,8 +113,6 @@ void addListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, s
     std::function<void(ClientCacheEntryExpiredEvent<std::string>)> listenerExpired = [](ClientCacheEntryExpiredEvent<std::string> e) { std::cout << "Expired entry: " << e.getKey() << std::endl; };
     clPtr->add_listener(listenerCreated);
     clPtr->add_listener(listenerExpired);
-    clPtr->filterFactoryName = std::vector<char>();
-    clPtr->converterFactoryName = std::vector<char>();
     std::vector<std::vector<char> > filterFactoryParams;
     std::vector<std::vector<char> > converterFactoryParams;
     cache.addClientListener(*clPtr, filterFactoryParams, converterFactoryParams);

@@ -18,5 +18,5 @@ include_directories(${HOTROD_PACKAGE_DIR}/usr/include)
 
 link_directories(${HOTROD_PACKAGE_DIR}/usr/lib)
 
-add_executable(quickstart src/main.cpp)
+add_executable(quickstart src/quickstart.cpp)
 target_link_libraries(quickstart hotrod hotrod_protobuf)

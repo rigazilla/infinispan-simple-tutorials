@@ -64,7 +64,6 @@ void addPurchase(RemoteCache<std::string, std::string> &cache)
     cache.put(product+":"+std::to_string(ms.count()),details, 30, TimeUnit::SECONDS);
 }
 
-static bool installed = false;
 std::unique_ptr<CacheClientListener<std::string, std::string> > clCustomPtr, clPtr;
 
 void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, std::string> &cache)
@@ -96,7 +95,6 @@ void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::str
     marshaller->marshall(strArgs, param);
     filterFactoryParams.push_back(param);
     cache.addClientListener(*clCustomPtr, filterFactoryParams, converterFactoryParams);
-    installed=true;
 }
 
 
@@ -116,7 +114,6 @@ void addListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, s
     std::vector<std::vector<char> > filterFactoryParams;
     std::vector<std::vector<char> > converterFactoryParams;
     cache.addClientListener(*clPtr, filterFactoryParams, converterFactoryParams);
-    installed=true;
 }
 
 void removeCustomListener(RemoteCache<std::string, std::string> &cache)

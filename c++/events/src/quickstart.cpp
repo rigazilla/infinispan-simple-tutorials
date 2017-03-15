@@ -109,9 +109,7 @@ void addListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, s
             [](ClientCacheEntryExpiredEvent<std::string> e) {std::cout << "Expired entry: " << e.getKey() << std::endl;};
     clPtr->add_listener(listenerCreated);
     clPtr->add_listener(listenerExpired);
-    std::vector<std::vector<char> > filterFactoryParams;
-    std::vector<std::vector<char> > converterFactoryParams;
-    cache.addClientListener(*clPtr, filterFactoryParams, converterFactoryParams);
+    cache.addClientListener(*clPtr, std::vector<std::vector<char> >(), std::vector<std::vector<char> >());
 }
 
 void addFilteredListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, std::string> &cache) {
@@ -131,13 +129,12 @@ void addFilteredListener(Marshaller<std::string>* marshaller, RemoteCache<std::s
     char fName[] = "string-is-equal-filter-factory";
     clFilteredPtr->filterFactoryName = std::vector<char>(fName, fName + std::strlen(fName));
     std::vector<std::vector<char> > filterFactoryParams;
-    std::vector<std::vector<char> > converterFactoryParams;
     std::string strArgs("hiking");
     std::vector<char> param;
     marshaller->marshall(strArgs, param);
     filterFactoryParams.push_back(param);
 
-    cache.addClientListener(*clFilteredPtr, filterFactoryParams, converterFactoryParams);
+    cache.addClientListener(*clFilteredPtr, filterFactoryParams, std::vector<std::vector<char> >());
 }
 
 void removeListener(RemoteCache<std::string, std::string> &cache) {

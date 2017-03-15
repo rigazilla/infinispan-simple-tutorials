@@ -37,8 +37,10 @@ static std::string APP_MENU = "\nAvailable actions:\n"
         "1. Add purchase\n"
         "2. Add listener\n"
         "3. Remove listener\n"
-        "4. Add custom listener\n"
-        "5. Remove custom listener\n"
+        "4. Add filtered listener\n"
+        "5. Remove filtered listener\n"
+        "6. Add custom listener\n"
+        "7. Remove custom listener\n"
         "10. Quit\n";
 
 void displayActions() {
@@ -62,7 +64,7 @@ void addPurchase(RemoteCache<std::string, std::string> &cache) {
     cache.put(product + ":" + std::to_string(ms.count()), details, 30, TimeUnit::SECONDS);
 }
 
-std::unique_ptr<CacheClientListener<std::string, std::string> > clCustomPtr, clPtr;
+std::unique_ptr<CacheClientListener<std::string, std::string> > clCustomPtr, clPtr, clFilteredPtr;
 
 void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, std::string> &cache) {
     if (clCustomPtr) {
@@ -72,7 +74,7 @@ void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::str
     auto cl = new CacheClientListener<std::string, std::string>(cache);
     clCustomPtr.reset(cl);
     std::function<void(ClientCacheEntryCreatedEvent<std::string>)> listenerCreated =
-            [](ClientCacheEntryCreatedEvent<std::string> e) {std::cout << e.getKey() << std::endl;};
+            [](ClientCacheEntryCreatedEvent<std::string> e) {std::cout << "Custom listener: "<< e.getKey() << std::endl;};
     std::function<void(ClientCacheEntryCustomEvent)> listenerCustom = [] (ClientCacheEntryCustomEvent e)
     {
         std::string str= JBasicMarshallerHelper::unmarshall<std::string>(e.getEventData().data());
@@ -87,7 +89,7 @@ void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::str
     std::vector<std::vector<char> > filterFactoryParams;
     std::vector<std::vector<char> > converterFactoryParams;
 
-    std::string strArgs("nachos");
+    std::string strArgs("hiking");
     std::vector<char> param;
     marshaller->marshall(strArgs, param);
     filterFactoryParams.push_back(param);
@@ -112,13 +114,30 @@ void addListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, s
     cache.addClientListener(*clPtr, filterFactoryParams, converterFactoryParams);
 }
 
-void removeCustomListener(RemoteCache<std::string, std::string> &cache) {
-    if (!clCustomPtr) {
-        std::cout << "Not installed" << std::endl;
+void addFilteredListener(Marshaller<std::string>* marshaller, RemoteCache<std::string, std::string> &cache) {
+    if (clFilteredPtr) {
+        std::cout << "Already installed" << std::endl;
         return;
     }
-    cache.removeClientListener(*clCustomPtr);
-    clCustomPtr.release();
+    auto cl = new CacheClientListener<std::string, std::string>(cache);
+    clFilteredPtr.reset(cl);
+    std::function<void(ClientCacheEntryCreatedEvent<std::string>)> listenerCreated =
+            [](ClientCacheEntryCreatedEvent<std::string> e) {std::cout << "Filtered New entry: " << e.getKey() << std::endl;};
+    std::function<void(ClientCacheEntryExpiredEvent<std::string>)> listenerExpired =
+            [](ClientCacheEntryExpiredEvent<std::string> e) {std::cout << "Filtered Expired entry: " << e.getKey() << std::endl;};
+    clFilteredPtr->add_listener(listenerCreated);
+    clFilteredPtr->add_listener(listenerExpired);
+
+    char fName[] = "string-is-equal-filter-factory";
+    clFilteredPtr->filterFactoryName = std::vector<char>(fName, fName + std::strlen(fName));
+    std::vector<std::vector<char> > filterFactoryParams;
+    std::vector<std::vector<char> > converterFactoryParams;
+    std::string strArgs("hiking");
+    std::vector<char> param;
+    marshaller->marshall(strArgs, param);
+    filterFactoryParams.push_back(param);
+
+    cache.addClientListener(*clFilteredPtr, filterFactoryParams, converterFactoryParams);
 }
 
 void removeListener(RemoteCache<std::string, std::string> &cache) {
@@ -128,6 +147,24 @@ void removeListener(RemoteCache<std::string, std::string> &cache) {
     }
     cache.removeClientListener(*clPtr);
     clPtr.release();
+}
+
+void removeFilteredListener(RemoteCache<std::string, std::string> &cache) {
+    if (!clFilteredPtr) {
+        std::cout << "Not installed" << std::endl;
+        return;
+    }
+    cache.removeClientListener(*clFilteredPtr);
+    clCustomPtr.release();
+}
+
+void removeCustomListener(RemoteCache<std::string, std::string> &cache) {
+    if (!clCustomPtr) {
+        std::cout << "Not installed" << std::endl;
+        return;
+    }
+    cache.removeClientListener(*clCustomPtr);
+    clCustomPtr.release();
 }
 
 int main(int argc, char *argv[]) {
@@ -160,9 +197,15 @@ int main(int argc, char *argv[]) {
             removeListener(cache);
             break;
         case 4:
-            addCustomListener(testkm, cache);
+            addFilteredListener(testkm, cache);
             break;
         case 5:
+            removeFilteredListener(cache);
+            break;
+        case 6:
+            addCustomListener(testkm, cache);
+            break;
+        case 7:
             removeCustomListener(cache);
             break;
         case 10:

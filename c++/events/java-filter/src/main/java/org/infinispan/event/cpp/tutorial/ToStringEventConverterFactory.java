@@ -17,7 +17,7 @@ public class ToStringEventConverterFactory implements CacheEventConverterFactory
 	class ToStringConverter implements CacheEventConverter<String, String, String>  {
 		      public String convert(String key, String oldValue, Metadata oldMetadata, 
 		               String newValue, Metadata newMetadata, EventType eventType) {
-		         String s = "custom event ("+ (eventType==null ? "null" : eventType.toString())+"): "+ key+" "+newValue;
+		         String s = "custom event ("+ (eventType==null ? "null" : eventType.getType().name())+"): "+ key+" "+newValue;
 		         System.out.println(s);
 		         return s;
 		      }

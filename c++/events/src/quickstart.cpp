@@ -82,13 +82,12 @@ void addCustomListener(Marshaller<std::string>* marshaller, RemoteCache<std::str
     };
     clCustomPtr->add_listener(listenerCreated);
     clCustomPtr->add_listener(listenerCustom);
-    char fName[] = "string-is-equal-filter-factory";
     char cName[] = "to-string-converter-factory";
-    clCustomPtr->filterFactoryName = std::vector<char>(fName, fName + std::strlen(fName));
+    char fName[] = "string-is-equal-filter-factory";
     clCustomPtr->converterFactoryName = std::vector<char>(cName, cName + std::strlen(cName));
+    clFilteredPtr->filterFactoryName = std::vector<char>(fName, fName + std::strlen(fName));
     std::vector<std::vector<char> > filterFactoryParams;
     std::vector<std::vector<char> > converterFactoryParams;
-
     std::string strArgs("hiking");
     std::vector<char> param;
     marshaller->marshall(strArgs, param);

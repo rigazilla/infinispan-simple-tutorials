@@ -30,17 +30,17 @@ Do one of the following to install the Infinispan Operator:
 * Install the Infinispan Operator manually, as follows:
   1. Apply the role and role bindings.
   ```
-  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.0/deploy/rbac.yaml
+  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.2/deploy/rbac.yaml
   ```
-    **TIP:** You can replace `0.3.0` with another tagged version of the Infinispan Operator.
+    **TIP:** You can replace `0.3.2` with another tagged version of the Infinispan Operator.
 
   2. Apply the custom resource definition for the operator.
   ```
-  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.0/deploy/crd.yaml
+  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.2/deploy/crd.yaml
   ```
   3. Apply the template for the operator.
   ```
-  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.0/deploy/operator.yaml
+  $ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.2/deploy/operator.yaml
   ```
 
 * Build from source or use the public image to install the Infinispan Operator. See the [Infinispan Operator README](https://github.com/infinispan/infinispan-operator).
@@ -53,7 +53,7 @@ Running the Infinispan Operator Tutorial
 ----------------------------------------
 1. Create an Infinispan cluster with three nodes.
 ```bash
-$ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.0/deploy/cr/cr_minimal.yaml
+$ oc apply -f https://raw.githubusercontent.com/infinispan/infinispan-operator/0.3.2/deploy/cr/cr_minimal.yaml
 ```
 
 2. Verify that the Infinispan cluster forms.

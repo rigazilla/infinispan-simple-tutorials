@@ -1,4 +1,4 @@
-REPO ?= infinispan/infinispan-operator/0.3.0
+REPO ?= infinispan/infinispan-operator/0.3.2
 NAMESPACE ?= operator-testing
 
 .PHONY: deploy run build test all

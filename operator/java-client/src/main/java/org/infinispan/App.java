@@ -1,8 +1,20 @@
 package org.infinispan;
 
+import java.security.cert.X509Certificate;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.ClientIntelligence;
+import org.infinispan.client.hotrod.configuration.SaslQop;
+
 import org.infinispan.client.hotrod.impl.ConfigurationProperties;
 
 import gnu.getopt.Getopt;
@@ -15,21 +27,35 @@ public class App {
     static String host = "127.0.0.1";
     static int port = ConfigurationProperties.DEFAULT_HOTROD_PORT;
     static String username, password;
+    static boolean tls;
+    static String truststorePath;
+    static String truststorePass;
 
     public static void main(String[] args) {
+        // Accept untrusted certificates for this tutorial
+        initSSLSocketFactory();
         // getopt and configure static variables
         configure(args);
         // Create a configuration for a locally-running server
-        ConfigurationBuilder builder = new ConfigurationBuilder();
-        builder.addServer().host(host).port(port);
-        if (username != null && password != null) {
-            builder.security().authentication().saslMechanism("PLAIN").username(username).password(password);
+
+        Configuration configuration;
+
+        if (tls) { // Configuration with encryption
+            configuration = new ConfigurationBuilder().addServer().host(host).port(port)
+                    .clientIntelligence(ClientIntelligence.BASIC).security().authentication().enable()
+                    .username("developer").password(password).realm("default").serverName("infinispan")
+                    .saslMechanism("DIGEST-MD5").saslQop(SaslQop.AUTH).ssl().enable()
+                    .trustStoreFileName(truststorePath)
+                    .trustStorePassword(truststorePass.toCharArray()).build();
+        } else {
+            configuration = new ConfigurationBuilder().addServer().host(host).port(port)
+            .clientIntelligence(ClientIntelligence.BASIC).security().authentication().saslMechanism("PLAIN").username(username).password(password).build();
         }
         // Connect to the server
-        RemoteCacheManager cacheManager = new RemoteCacheManager(builder.build());
+        RemoteCacheManager cacheManager = new RemoteCacheManager(configuration);
         // Obtain the remote cache
         try {
-        cacheManager.administration().createCache("quickstart-cache", "org.infinispan.DIST_SYNC");
+            cacheManager.administration().createCache("quickstart-cache", "org.infinispan.DIST_SYNC");
         } catch (Exception ex) {
             // Maybe cache already exist? Go on anyway
         }
@@ -44,7 +70,7 @@ public class App {
     }
 
     static void configure(String args[]) {
-        Getopt g = new Getopt("testprog", args, "h:p:U:P:");
+        Getopt g = new Getopt("testprog", args, "h:p:U:P:t:k:");
         //
         int c;
         String arg;
@@ -66,10 +92,43 @@ public class App {
                 arg = g.getOptarg();
                 password = arg;
                 break;
+            case 't':
+                tls = true;
+                arg = g.getOptarg();
+                truststorePath = arg;
+                break;
+            case 'k':
+                tls = true;
+                arg = g.getOptarg();
+                truststorePass = arg;
+                break;
             case '?':
             default:
                 break;
             }
+        }
+    }
+
+    // Create a trust manager that does not validate certificate chains
+    private static TrustManager[] _trustAllCerts = new TrustManager[] { new X509TrustManager() {
+        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
+
+        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+        }
+
+        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
+        }
+    } };
+
+    private static void initSSLSocketFactory() {
+
+        try {
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, _trustAllCerts, new java.security.SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+        } catch (Exception e) {
         }
     }
 }

@@ -11,7 +11,7 @@
     <dependency>
       <groupId>org.infinispan</groupId>
       <artifactId>infinispan-client-hotrod</artifactId>
-      <version>10.0.0.CR3</version>
+      <version>10.1.2.Final</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/gnu.getopt/java-getopt -->
     <dependency>

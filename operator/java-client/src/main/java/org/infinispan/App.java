@@ -33,7 +33,7 @@ public class App {
 
     public static void main(String[] args) {
         // Accept untrusted certificates for this tutorial
-        initSSLSocketFactory();
+        SSLContext ctx = initSSLSocketFactory();
         // getopt and configure static variables
         configure(args);
         // Create a configuration for a locally-running server
@@ -43,10 +43,9 @@ public class App {
         if (tls) { // Configuration with encryption
             configuration = new ConfigurationBuilder().addServer().host(host).port(port)
                     .clientIntelligence(ClientIntelligence.BASIC).security().authentication().enable()
-                    .username("developer").password(password).realm("default").serverName("infinispan")
-                    .saslMechanism("DIGEST-MD5").saslQop(SaslQop.AUTH).ssl().enable()
-                    .trustStoreFileName(truststorePath)
-                    .trustStorePassword(truststorePass.toCharArray()).build();
+                    .username(username).password(password).realm("default").serverName("infinispan")
+                    .saslMechanism("DIGEST-MD5").saslQop(SaslQop.AUTH).ssl().sslContext(ctx).enable()
+                    .build();
         } else {
             configuration = new ConfigurationBuilder().addServer().host(host).port(port)
             .clientIntelligence(ClientIntelligence.BASIC).security().authentication().saslMechanism("PLAIN").username(username).password(password).build();
@@ -70,7 +69,7 @@ public class App {
     }
 
     static void configure(String args[]) {
-        Getopt g = new Getopt("testprog", args, "h:p:U:P:t:k:");
+        Getopt g = new Getopt("testprog", args, "h:p:U:P:t:k:T");
         //
         int c;
         String arg;
@@ -97,6 +96,9 @@ public class App {
                 arg = g.getOptarg();
                 truststorePath = arg;
                 break;
+            case 'T':
+                tls = true;
+                break;
             case 'k':
                 tls = true;
                 arg = g.getOptarg();
@@ -122,13 +124,15 @@ public class App {
         }
     } };
 
-    private static void initSSLSocketFactory() {
+    private static SSLContext initSSLSocketFactory() {
 
+        SSLContext sc = null;
         try {
-            SSLContext sc = SSLContext.getInstance("SSL");
+            sc = SSLContext.getInstance("SSL");
             sc.init(null, _trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
         } catch (Exception e) {
         }
+        return sc;
     }
 }

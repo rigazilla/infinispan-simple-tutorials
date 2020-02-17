@@ -6,16 +6,18 @@ import java.security.cert.X509Certificate;
 import java.util.Properties;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.SaslQop;
+
 import org.infinispan.client.hotrod.impl.ConfigurationProperties;
 
 import gnu.getopt.Getopt;
@@ -24,7 +26,7 @@ import gnu.getopt.Getopt;
  * Infinispan+operator+hotrod client quickstart
  *
  */
-public class App {
+public class AppWithProperties {
     static String host = "127.0.0.1";
     static int port = ConfigurationProperties.DEFAULT_HOTROD_PORT;
     static String username, password;
@@ -32,30 +34,24 @@ public class App {
     static String truststorePass;
 
     public static void main(String[] args) {
-        // Accept untrusted certificates for this tutorial
-        SSLContext ctx = initSSLSocketFactory();
-        // getopt and configure static variables
-        configure(args);
-        // Create a configuration for a locally-running server
-
         Configuration configuration;
 
-        { // Configuration with encryption
-            InputStream is = App.class.getClassLoader().getResourceAsStream("hotrod.properties");
-            Properties prop = new Properties();
-            try {
-                prop.load(is);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-                System.exit(1);
-            }
-            configuration = new ConfigurationBuilder().addServer().host(host).port(port)
-                    .clientIntelligence(ClientIntelligence.BASIC).security().authentication().enable()
-                    .username(username).password(password).realm("default").serverName("infinispan")
-                    .saslMechanism("DIGEST-MD5").saslQop(SaslQop.AUTH).ssl().sniHostName(host).sslContext(ctx).enable()
-                    .build();
+        InputStream is = AppWithProperties.class.getClassLoader().getResourceAsStream("hotrod.properties");
+        Properties prop = new Properties();
+        try {
+            prop.load(is);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            System.exit(1);
         }
+        ConfigurationBuilder cb = new ConfigurationBuilder().withProperties(prop);
+
+        // Accept untrusted certificates for this tutorial
+        SSLContext ctx = initSSLSocketFactory();
+        cb.security().ssl().sslContext(ctx);
+        configuration = cb.build();
+
         // Connect to the server
         try (RemoteCacheManager cacheManager = new RemoteCacheManager(configuration)) {
             cacheManager.administration().createCache("quickstart-cache", "org.infinispan.DIST_SYNC");
@@ -68,44 +64,6 @@ public class App {
             cacheManager.administration().removeCache("quickstart-cache");
         } catch (Exception ex) {
             // Maybe cache already exist? Go on anyway
-        }
-    }
-
-    static void configure(String args[]) {
-        Getopt g = new Getopt("testprog", args, "h:p:U:P:t:k:T");
-        //
-        int c;
-        String arg;
-        while ((c = g.getopt()) != -1) {
-            switch (c) {
-            case 'h':
-                arg = g.getOptarg();
-                host = arg;
-                break;
-            case 'p':
-                arg = g.getOptarg();
-                port = Integer.parseInt(arg);
-                break;
-            case 'U':
-                arg = g.getOptarg();
-                username = arg;
-                break;
-            case 'P':
-                arg = g.getOptarg();
-                password = arg;
-                break;
-            case 't':
-                arg = g.getOptarg();
-                truststorePath = arg;
-                break;
-            case 'k':
-                arg = g.getOptarg();
-                truststorePass = arg;
-                break;
-            case '?':
-            default:
-                break;
-            }
         }
     }
 
